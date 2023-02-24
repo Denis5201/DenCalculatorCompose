@@ -27,7 +27,8 @@ val Typography = Typography(
     h2 = TextStyle(
         fontFamily = googleSans,
         fontWeight = FontWeight.Bold,
-        fontSize = 28.sp
+        fontSize = 28.sp,
+        color = whiteGray
     )
     /* Other default text styles to override
     button = TextStyle(
