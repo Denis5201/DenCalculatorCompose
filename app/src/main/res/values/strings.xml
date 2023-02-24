@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DenCalculatorCompose</string>
+    <string name="calculator">Calculator</string>
+    <string name="error">Error</string>
+</resources>
