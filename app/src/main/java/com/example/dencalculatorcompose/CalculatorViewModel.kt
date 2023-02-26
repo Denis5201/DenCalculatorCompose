@@ -1,82 +1,85 @@
 package com.example.dencalculatorcompose
 
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class CalculatorViewModel: ViewModel() {
-    var input = mutableStateOf("")
-        private set
-    var isError = mutableStateOf(false)
-        private set
 
-    private var number1 = ""
-    private var number2 = ""
-    private var operation = ""
+    private val _input = MutableLiveData("")
+    val input: LiveData<String> = _input
 
-    fun getInputByClicking(sign: String) {
+    private val _isError = MutableLiveData(false)
+    val isError: LiveData<Boolean> = _isError
+
+    private var number1 = Constants.EMPTY_STRING
+    private var number2 = Constants.EMPTY_STRING
+    private var operation = Constants.EMPTY_STRING
+
+    fun getInputByClicking(sign: CalcButton) {
         when (sign) {
-            "AC" -> clear()
-            "+","-","×","÷" -> setOperation(sign)
-            "%" -> percentResult()
-            "±" -> change()
-            "=" -> getResult()
-            else -> if (input.value.length < 10) setInput(sign)
+            CalcButton.AC -> clear()
+            CalcButton.ADDITION, CalcButton.SUBTRACTION, CalcButton.MULTIPLICATION, CalcButton.DIVISION -> setOperation(sign.name)
+            CalcButton.PERCENT -> percentResult()
+            CalcButton.PLUSMINUS -> change()
+            CalcButton.EQUALS -> getResult()
+            else -> if (input.value!!.length < 10) setInput(sign.sign)
         }
     }
 
     fun backspace() {
-        if (isError.value) {
+        if (_isError.value!!) {
             clear()
         }
-        else if (input.value.isNotEmpty()) {
-            input.value = input.value.dropLast(1)
+        else if (_input.value!!.isNotEmpty()) {
+            _input.value = _input.value!!.dropLast(1)
         }
     }
 
     private fun change() {
-        if (input.value.isNotEmpty()) {
-            if (input.value[0] == '-') {
-                input.value = input.value.drop(1)
+        if (_input.value!!.isNotEmpty()) {
+            if (_input.value!![0] == Constants.MINUS) {
+                _input.value = _input.value!!.drop(1)
             }
             else {
-                input.value = "-${input.value}"
+                _input.value = "${Constants.MINUS}${_input.value}"
             }
         }
     }
 
     private fun setInput(sign: String) {
-        if (isError.value) {
+        if (_isError.value!!) {
             clear()
         }
-        input.value += sign
+        _input.value += sign
     }
 
     private fun setOperation(sign: String) {
-        if (!isError.value) {
+        if (!_isError.value!!) {
             operation = sign
-            number1 = input.value
-            input.value = ""
+            number1 = _input.value!!
+            _input.value = Constants.EMPTY_STRING
         }
     }
 
     private fun clear() {
-        input.value = ""
-        operation = ""
-        isError.value = false
+        _input.value = Constants.EMPTY_STRING
+        operation = Constants.EMPTY_STRING
+        _isError.value = false
     }
 
     private fun getResult() {
         if (setSecondNumberAndCheck() && number1.isNotEmpty() &&
             number2.isNotEmpty() && operation.isNotEmpty()) {
 
-            number1 = number1.replace(',', '.')
-            number2 = number2.replace(',', '.')
+            number1 = number1.replace(Constants.COMMA, Constants.DOT)
+            number2 = number2.replace(Constants.COMMA, Constants.DOT)
 
             val result = when (operation) {
-                "+" -> number1.toDouble() + number2.toDouble()
-                "-" -> number1.toDouble() - number2.toDouble()
-                "×" -> number1.toDouble() * number2.toDouble()
-                "÷" -> number1.toDouble() / number2.toDouble()
+                CalcButton.ADDITION.name -> number1.toDouble() + number2.toDouble()
+                CalcButton.SUBTRACTION.name -> number1.toDouble() - number2.toDouble()
+                CalcButton.MULTIPLICATION.name -> number1.toDouble() * number2.toDouble()
+                CalcButton.DIVISION.name -> number1.toDouble() / number2.toDouble()
                 else -> 0.0
             }
             setStringResult(result)
@@ -87,26 +90,25 @@ class CalculatorViewModel: ViewModel() {
         if (setSecondNumberAndCheck() && number1.isNotEmpty() &&
             number2.isNotEmpty() && operation.isNotEmpty()) {
 
-            number1 = number1.replace(',', '.')
-            number2 = number2.replace(',', '.')
+            number1 = number1.replace(Constants.COMMA, Constants.DOT)
+            number2 = number2.replace(Constants.COMMA, Constants.DOT)
 
             val result = when (operation) {
-                "+" -> number1.toDouble() + number2.toDouble() * number1.toDouble() / 100
-                "-" -> number1.toDouble() - number2.toDouble() * number1.toDouble() / 100
-                "×" -> number1.toDouble() * number2.toDouble() / 100
-                "÷" -> number1.toDouble() / (number2.toDouble() / 100)
+                CalcButton.ADDITION.name -> number1.toDouble() + number2.toDouble() * number1.toDouble() / 100
+                CalcButton.SUBTRACTION.name -> number1.toDouble() - number2.toDouble() * number1.toDouble() / 100
+                CalcButton.MULTIPLICATION.name -> number1.toDouble() * number2.toDouble() / 100
+                CalcButton.DIVISION.name -> number1.toDouble() / (number2.toDouble() / 100)
                 else -> 0.0
             }
             setStringResult(result)
         }
-
     }
 
     private fun setSecondNumberAndCheck(): Boolean {
-        number2 = input.value
+        number2 = _input.value!!
 
-        if (number2 == "0" && operation == "÷") {
-            isError.value = true
+        if (number2 == Constants.ZERO && operation == CalcButton.DIVISION.name) {
+            _isError.value = true
             return false
         }
         return true
@@ -116,8 +118,8 @@ class CalculatorViewModel: ViewModel() {
         number1 = if (result.compareTo(result.toInt()) == 0) {
             result.toInt().toString()
         } else {
-            result.toString().replace('.', ',')
+            result.toString().replace(Constants.DOT, Constants.COMMA)
         }
-        input.value = number1
+        _input.value = number1
     }
 }
