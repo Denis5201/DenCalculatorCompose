@@ -31,7 +31,8 @@ fun CalculatorScreen() {
     )
 
     val input by viewModel.input.observeAsState()
-    val isError by viewModel.isError.observeAsState()
+    val isError by viewModel.isError.observeAsState(false)
+    val isBackspaceEnabled by viewModel.isBackspaceEnabled.observeAsState(false)
 
     Column(
         modifier = Modifier
@@ -43,10 +44,10 @@ fun CalculatorScreen() {
             style = MaterialTheme.typography.h2
         )
         Text(
-            text = if (isError!!) stringResource(R.string.error) else input!!,
+            text = if (isError) stringResource(R.string.error) else input!!,
             modifier = Modifier.padding(top = 60.dp),
             style = MaterialTheme.typography.h1,
-            color = if (isError!!)
+            color = if (isError)
                     MaterialTheme.colors.primaryVariant
                 else
                     MaterialTheme.colors.primary,
@@ -58,63 +59,62 @@ fun CalculatorScreen() {
             modifier = Modifier
                 .padding(top = 40.dp, end = 12.dp)
                 .align(Alignment.End),
-            enabled = input!!.isNotEmpty()
+            enabled = isBackspaceEnabled
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.backspace),
                 contentDescription = null,
-                tint = if (input!!.isNotEmpty()) whiteGray else Color.Gray
+                tint = if (isBackspaceEnabled) whiteGray else Color.Gray
             )
         }
         Divider(
             modifier = Modifier.padding(top = 32.dp),
-            thickness = 1.dp, color = lineColor
+            thickness = 1.dp,
+            color = lineColor
         )
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             buttons.forEach {
-                SimpleInputRow(modifier = Modifier.weight(1f), it, viewModel::getInputByClicking)
+                SimpleInputRow(it, viewModel::getInputByClicking, Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-fun SimpleInputRow(modifier: Modifier, listSign: List<CalcButton>, click: (CalcButton) -> Unit) {
+fun SimpleInputRow(listSign: List<CalcButton>, click: (CalcButton) -> Unit, modifier: Modifier) {
     val addWeight = if (listSign.size == 3) 1.2f else 0f
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 16.dp)
     ) {
-        CalculatorButton(sign = listSign[0], isGray = true, click, Modifier.weight(1f + addWeight))
+        CalculatorButton(sign = listSign[0], isRight = true, click, Modifier.weight(1f + addWeight))
         Spacer(modifier = Modifier.padding(8.dp))
-        CalculatorButton(sign = listSign[1], isGray = true, click, Modifier.weight(1f))
-        Spacer(modifier = Modifier.padding(8.dp))
-        if (listSign.size > 3) {
-            CalculatorButton(sign = listSign[2], isGray = true, click, Modifier.weight(1f))
+        for (i in 1 until listSign.size - 1) {
+            CalculatorButton(sign = listSign[i], isRight = true, click, Modifier.weight(1f))
             Spacer(modifier = Modifier.padding(8.dp))
         }
-        CalculatorButton(sign = listSign[listSign.size - 1], isGray = false, click, Modifier.weight(1f))
+        CalculatorButton(sign = listSign[listSign.size - 1], isRight = false, click, Modifier.weight(1f))
     }
 }
 
 @Composable
-fun CalculatorButton(sign: CalcButton, isGray: Boolean, click: (CalcButton) -> Unit, modifier: Modifier) {
+fun CalculatorButton(sign: CalcButton, isRight: Boolean, click: (CalcButton) -> Unit, modifier: Modifier) {
     Button(
         onClick = { click(sign) },
         modifier = modifier.fillMaxSize(),
         shape = MaterialTheme.shapes.large,
         colors = ButtonDefaults.buttonColors(
-            backgroundColor = if (isGray) gray else red
+            backgroundColor = if (isRight) gray else red
         )
     ) {
         Text(
             text = sign.sign,
             style = MaterialTheme.typography.body1,
-            color = if (isGray) MaterialTheme.colors.secondary else MaterialTheme.colors.secondaryVariant
+            color = if (isRight) MaterialTheme.colors.secondary else MaterialTheme.colors.secondaryVariant
         )
     }
 }
